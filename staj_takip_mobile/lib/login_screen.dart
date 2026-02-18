@@ -136,8 +136,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: _createTestUser,
-                  child: const Text('Test Kullanıcısı Oluştur (Demo)'),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                    );
+                  },
+                  child: const Text('Hesabınız yok mu? Kayıt Olun'),
                 ),
               ],
             ),
@@ -145,29 +149,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _createTestUser() async {
-    try {
-      await FirebaseFirestore.instance.collection('users').add({
-        'custom_id': 'admin',
-        'password': '123',
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Test kullanıcısı oluşturuldu: ID: admin, Şifre: 123',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Hata: $e')));
-      }
-    }
   }
 }
