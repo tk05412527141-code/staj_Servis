@@ -10,7 +10,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _idController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController =
       TextEditingController(); // Şifre tekrarı için isteğe bağlı
@@ -23,13 +23,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       });
 
       try {
-        final String customId = _idController.text.trim();
+        final String email = _emailController.text.trim();
         final String password = _passwordController.text.trim();
 
         // Check if user already exists
         final QuerySnapshot result = await FirebaseFirestore.instance
             .collection('users')
-            .where('custom_id', isEqualTo: customId)
+            .where('email', isEqualTo: email)
             .limit(1)
             .get();
 
@@ -38,7 +38,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
-                  'Bu ID zaten alınmış. Lütfen başka bir ID seçin.',
+                  'Bu E-posta zaten alınmış. Lütfen başka bir E-posta seçin.',
                 ),
               ),
             );
@@ -46,7 +46,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         } else {
           // Create new user
           await FirebaseFirestore.instance.collection('users').add({
-            'custom_id': customId,
+            'email': email,
             'password': password,
             // 'created_at': FieldValue.serverTimestamp(), // İsteğe bağlı: oluşturulma tarihi
           });
@@ -80,7 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _idController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -106,18 +106,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
-                  controller: _idController,
+                  controller: _emailController,
                   decoration: const InputDecoration(
-                    labelText: 'Özel ID Belirleyin',
+                    labelText: 'E-posta Adresi',
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person_add),
+                    prefixIcon: Icon(Icons.email),
                   ),
+                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Lütfen bir Özel ID giriniz';
+                      return 'Lütfen bir E-posta giriniz';
                     }
-                    if (value.length < 3) {
-                      return 'ID en az 3 karakter olmalı';
+                    if (!value.contains('@')) {
+                      return 'Geçerli bir E-posta giriniz';
                     }
                     return null;
                   },

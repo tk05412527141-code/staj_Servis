@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'signup_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _idController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
@@ -22,13 +23,13 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        final String customId = _idController.text.trim();
+        final String email = _emailController.text.trim();
         final String password = _passwordController.text.trim();
 
-        // Query Firestore for the user with the given custom ID and password
+        // Query Firestore for the user with the given email and password
         final QuerySnapshot result = await FirebaseFirestore.instance
             .collection('users')
-            .where('custom_id', isEqualTo: customId)
+            .where('email', isEqualTo: email)
             .where('password', isEqualTo: password)
             .limit(1)
             .get();
@@ -39,14 +40,15 @@ class _LoginScreenState extends State<LoginScreen> {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('Giriş Başarılı!')));
-            // Navigate to home screen or dashboard here
-            // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
           }
         } else {
           // Login failed
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Hatalı ID veya Şifre')),
+              const SnackBar(content: Text('Hatalı E-posta veya Şifre')),
             );
           }
         }
@@ -70,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _idController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -95,15 +97,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
-                  controller: _idController,
+                  controller: _emailController,
                   decoration: const InputDecoration(
-                    labelText: 'Özel ID',
+                    labelText: 'E-posta',
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                    prefixIcon: Icon(Icons.email),
                   ),
+                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Lütfen Özel ID giriniz';
+                      return 'Lütfen E-posta giriniz';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Geçerli bir E-posta giriniz';
                     }
                     return null;
                   },
