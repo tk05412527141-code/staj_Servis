@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1098435280884",
+    "project_id": "staj-servis",
+    "storage_bucket": "staj-servis.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1098435280884:android:9b3279fd40fcc3c75a43a1",
+        "android_client_info": {
+          "package_name": "com.example.staj_takip_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgSUdsblScN4rTqAvX5MQD6hZaBbQxwRg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
