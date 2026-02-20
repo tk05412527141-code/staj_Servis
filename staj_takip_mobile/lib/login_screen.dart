@@ -153,12 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: const Text('Hesabınız yok mu? Kayıt Olun'),
                 ),
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-// ... (Rest of imports)
-
-// ...
-
                 const SizedBox(height: 20),
                 TextButton.icon(
                   onPressed: _managerAutoLogin,
@@ -181,11 +175,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
     try {
       // Fetch manager data from specific document
-      final docSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc('Qt3MdtMMnpUTX78GXHIV')
-              .get();
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc('Qt3MdtMMnpUTX78GXHIV')
+          .get();
 
       if (docSnapshot.exists) {
         final data = docSnapshot.data();
@@ -196,15 +189,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
           if (email != null && password != null) {
             _emailController.text = email;
             _passwordController.text = password;
-            
+
             // Auto-submit
             _login();
           } else {
-             if (mounted) {
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Belgede e-posta veya şifre eksik.')),
+                const SnackBar(
+                  content: Text('Belgede e-posta veya şifre eksik.'),
+                ),
               );
-              setState(() { _isLoading = false; });
+              setState(() {
+                _isLoading = false;
+              });
             }
           }
         }
@@ -213,15 +210,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Yönetici belgesi bulunamadı!')),
           );
-          setState(() { _isLoading = false; });
+          setState(() {
+            _isLoading = false;
+          });
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
-        );
-         setState(() { _isLoading = false; });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Hata: $e')));
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
