@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'signup_screen.dart';
 import 'home_screen.dart';
@@ -26,31 +27,33 @@ class _LoginScreenState extends State<LoginScreen> {
         final String email = _emailController.text.trim();
         final String password = _passwordController.text.trim();
 
-        // Query Firestore for the user with the given email and password
-        final QuerySnapshot result = await FirebaseFirestore.instance
-            .collection('users')
-            .where('email', isEqualTo: email)
-            .where('password', isEqualTo: password)
-            .limit(1)
-            .get();
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
 
-        if (result.docs.isNotEmpty) {
-          // Login success
-          if (mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Giriş Başarılı!')));
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
-            );
-          }
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Giriş Başarılı!')));
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        String message;
+        if (e.code == 'user-not-found') {
+          message = 'Kullanıcı bulunamadı.';
+        } else if (e.code == 'wrong-password') {
+          message = 'Hatalı şifre.';
         } else {
-          // Login failed
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Hatalı E-posta veya Şifre')),
-            );
-          }
+          message = 'Giriş yapılamadı: ${e.message}';
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
         }
       } catch (e) {
         if (mounted) {
@@ -150,11 +153,76 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: const Text('Hesabınız yok mu? Kayıt Olun'),
                 ),
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// ... (Rest of imports)
+
+// ...
+
+                const SizedBox(height: 20),
+                TextButton.icon(
+                  onPressed: _managerAutoLogin,
+                  icon: const Icon(Icons.flash_on),
+                  label: const Text('Yönetici Girişi (Otomatik)'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _managerAutoLogin() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Fetch manager data from specific document
+      final docSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc('Qt3MdtMMnpUTX78GXHIV')
+              .get();
+
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        if (data != null) {
+          final email = data['email'] as String?;
+          final password = data['password'] as String?;
+
+          if (email != null && password != null) {
+            _emailController.text = email;
+            _passwordController.text = password;
+            
+            // Auto-submit
+            _login();
+          } else {
+             if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Belgede e-posta veya şifre eksik.')),
+              );
+              setState(() { _isLoading = false; });
+            }
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Yönetici belgesi bulunamadı!')),
+          );
+          setState(() { _isLoading = false; });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+         setState(() { _isLoading = false; });
+      }
+    }
   }
 }

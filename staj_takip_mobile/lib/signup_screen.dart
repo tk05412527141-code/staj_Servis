@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -10,6 +11,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _companyNameController = TextEditingController(); // Şirket Adı için
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController =
@@ -23,6 +25,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       });
 
       try {
+        final String companyName = _companyNameController.text.trim();
         final String email = _emailController.text.trim();
         final String password = _passwordController.text.trim();
 
@@ -44,10 +47,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             );
           }
         } else {
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
           // Create new user
           await FirebaseFirestore.instance.collection('users').add({
             'email': email,
-            'password': password,
+            'companyName': companyName, // Şirket adını kaydediyoruz
             // 'created_at': FieldValue.serverTimestamp(), // İsteğe bağlı: oluşturulma tarihi
           });
 
@@ -80,6 +87,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
+    _companyNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -105,6 +113,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
+                TextFormField(
+                  controller:
+                      _companyNameController, // Şirket Adı için controller
+                  decoration: const InputDecoration(
+                    labelText: 'Şirket Adı',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.business),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Lütfen şirket adını giriniz';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
