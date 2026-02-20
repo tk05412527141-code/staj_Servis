@@ -88,14 +88,21 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (_userCompanyName == null) {
+    if (_userCompanyName == null || _userCompanyName!.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Hata')),
+        appBar: AppBar(title: const Text('Bilgi')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Kullanıcı şirketi bulunamadı.'),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Henüz bir şirkete atanmadınız.\nLütfen şirket yöneticiniz ile iletişime geçerek sizi eklemesini isteyin.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
