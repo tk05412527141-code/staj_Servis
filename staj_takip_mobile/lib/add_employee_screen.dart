@@ -36,7 +36,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
             await doc.reference.update({
               'companyName': widget.managerCompanyName,
               // Optional: Ensure they are set to employee role if needed
-              // 'role': 'employee',
+              'role': 'employee',
             });
           }
 

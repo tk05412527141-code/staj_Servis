@@ -29,13 +29,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         // Query users collection to find the document with matching email
-        /*
-        final querySnapshot =
-            await FirebaseFirestore.instance
-                .collection('users')
-                .where('email', isEqualTo: user.email)
-                .limit(1)
-                .get();
+
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: user.email)
+            .limit(1)
+            .get();
 
         if (querySnapshot.docs.isNotEmpty) {
           final userData = querySnapshot.docs.first.data();
@@ -45,9 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _isLoading = false;
           });
         }
-        */
-
-        // For testing/demo: Using specific document ID provided by user
+        /* For testing/demo: Using specific document ID provided by user
         final docSnapshot = await FirebaseFirestore.instance
             .collection('users')
             .doc('Qt3MdtMMnpUTX78GXHIV')
@@ -62,6 +59,12 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         } else {
           // Fallback if user document not found
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        */
+        else {
           setState(() {
             _isLoading = false;
           });
@@ -187,34 +190,48 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            record.isWarranty
-                                ? Icons.check_circle
-                                : Icons.cancel,
-                            color: record.isWarranty
-                                ? Colors.green
-                                : Colors.red,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            record.isWarranty
-                                ? 'Garanti Kapsamında'
-                                : 'Garanti Dışı',
-                            style: TextStyle(
+                      if (record.companyName == 'B Şirketi') ...[
+                        Text(
+                          'Sorun: ${record.animalProblem ?? 'Belirtilmedi'}',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        if (record.interventions != null &&
+                            record.interventions!.isNotEmpty)
+                          Text('Müdahale: ${record.interventions}'),
+                        if (record.medications != null &&
+                            record.medications!.isNotEmpty)
+                          Text('İlaç: ${record.medications}'),
+                        Text('Hekim: ${record.serviceEmployee}'),
+                      ] else ...[
+                        Row(
+                          children: [
+                            Icon(
+                              record.isWarranty
+                                  ? Icons.check_circle
+                                  : Icons.cancel,
                               color: record.isWarranty
                                   ? Colors.green
                                   : Colors.red,
-                              fontWeight: FontWeight.bold,
+                              size: 20,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text('Değişen Parça: ${record.replacedPart}'),
-                      Text('İlgilenen: ${record.serviceEmployee}'),
+                            const SizedBox(width: 8),
+                            Text(
+                              record.isWarranty
+                                  ? 'Garanti Kapsamında'
+                                  : 'Garanti Dışı',
+                              style: TextStyle(
+                                color: record.isWarranty
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Değişen Parça: ${record.replacedPart}'),
+                        Text('İlgilenen: ${record.serviceEmployee}'),
+                      ],
                       Text(
                         'Tarih: ${record.date.day}/${record.date.month}/${record.date.year}',
                         style: const TextStyle(

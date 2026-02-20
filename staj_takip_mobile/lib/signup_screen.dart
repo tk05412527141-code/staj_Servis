@@ -17,6 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController =
       TextEditingController(); // Şifre tekrarı için isteğe bağlı
   bool _isLoading = false;
+  bool _isManager = false; // Yönetici seçimi için durum değişkeni
 
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
@@ -51,10 +52,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             email: email,
             password: password,
           );
-          // Create new user
+          // Veritabanına kullanıcıyı kaydet
           await FirebaseFirestore.instance.collection('users').add({
             'email': email,
             'companyName': companyName, // Şirket adını kaydediyoruz
+            'role': _isManager ? 'manager' : 'employee',
+            'password':
+                password, // (GÜVENLİK UYARISI: Normalde şifreler buraya kaydedilmez, istek üzerine test için eklendi)
             // 'created_at': FieldValue.serverTimestamp(), // İsteğe bağlı: oluşturulma tarihi
           });
 
@@ -183,6 +187,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return 'Şifreler uyuşmuyor';
                     }
                     return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  title: const Text('Şirket Yöneticisiyim'),
+                  value: _isManager,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _isManager = value ?? false;
+                    });
                   },
                 ),
                 const SizedBox(height: 24),

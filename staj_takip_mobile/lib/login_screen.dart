@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Fetch manager data from specific document
       final docSnapshot = await FirebaseFirestore.instance
           .collection('users')
-          .doc('Qt3MdtMMnpUTX78GXHIV')
+          .doc('lnpnpSQz7TMzjyu9kkBK')
           .get();
 
       if (docSnapshot.exists) {

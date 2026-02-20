@@ -7,6 +7,9 @@ class ServiceRecord {
   final String replacedPart;
   final String serviceEmployee;
   final DateTime date;
+  final String? animalProblem;
+  final String? interventions;
+  final String? medications;
 
   ServiceRecord({
     required this.id,
@@ -15,6 +18,9 @@ class ServiceRecord {
     required this.replacedPart,
     required this.serviceEmployee,
     required this.date,
+    this.animalProblem,
+    this.interventions,
+    this.medications,
   });
 
   factory ServiceRecord.fromFirestore(DocumentSnapshot doc) {
@@ -26,6 +32,9 @@ class ServiceRecord {
       replacedPart: data['replacedPart'] ?? 'Yok',
       serviceEmployee: data['serviceEmployee'] ?? 'Atanmamış',
       date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      animalProblem: data['animalProblem'],
+      interventions: data['interventions'],
+      medications: data['medications'],
     );
   }
 
@@ -36,6 +45,9 @@ class ServiceRecord {
       'replacedPart': replacedPart,
       'serviceEmployee': serviceEmployee,
       'date': Timestamp.fromDate(date),
+      'animalProblem': animalProblem,
+      'interventions': interventions,
+      'medications': medications,
     };
   }
 }
