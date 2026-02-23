@@ -197,6 +197,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         IconButton(
+                          onPressed: () {
+                            setState(() => _isLoading = true);
+                            _fetchUserData();
+                          },
+                          icon: const Icon(
+                            Icons.refresh,
+                            size: 26,
+                            color: Colors.white,
+                          ),
+                          tooltip: 'Yenile',
+                        ),
+                        IconButton(
                           onPressed: () {},
                           icon: Stack(
                             children: [

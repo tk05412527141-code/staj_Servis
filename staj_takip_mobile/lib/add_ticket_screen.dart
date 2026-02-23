@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'app_theme.dart';
 
 class AddTicketScreen extends StatefulWidget {
@@ -54,6 +55,33 @@ class _AddTicketScreenState extends State<AddTicketScreen> {
       } else {
         _fetchAndFillData();
       }
+    } else {
+      _fetchCurrentUserName();
+    }
+  }
+
+  Future<void> _fetchCurrentUserName() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: user.email)
+            .limit(1)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          final userData = querySnapshot.docs.first.data();
+          final userName = userData['name'] ?? user.email?.split('@')[0] ?? '';
+          if (mounted) {
+            setState(() {
+              _assignedToController.text = userName;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Kullanıcı adı çekme hatası: $e');
     }
   }
 
@@ -300,9 +328,11 @@ class _AddTicketScreenState extends State<AddTicketScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _assignedToController,
+                      readOnly: true,
                       decoration: const InputDecoration(
                         labelText: 'Atanan Teknisyen',
                         prefixIcon: Icon(Icons.engineering_outlined),
+                        filled: true,
                       ),
                     ),
                     const SizedBox(height: 12),

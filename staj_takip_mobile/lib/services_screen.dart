@@ -133,6 +133,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
         title: const Text('Servisler'),
         automaticallyImplyLeading: false,
         actions: [
+          // Yenileme Butonu
+          IconButton(
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _fetchCompany();
+            },
+            icon: const Icon(Icons.refresh, color: AppTheme.primaryBlue),
+            tooltip: 'Yenile',
+          ),
           // CSV Dışa Aktar Butonu
           IconButton(
             onPressed: _exportServicesToCSV,

@@ -233,6 +233,14 @@ class _IncomeScreenState extends State<IncomeScreen> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _fetchData();
+            },
+            icon: const Icon(Icons.refresh, color: AppTheme.primaryBlue),
+            tooltip: 'Yenile',
+          ),
+          IconButton(
             onPressed: _exportIncomeToCSV,
             icon: const Icon(Icons.download, color: AppTheme.primaryBlue),
             tooltip: 'CSV Olarak İndir',
