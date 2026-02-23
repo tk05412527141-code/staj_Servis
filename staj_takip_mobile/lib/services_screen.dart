@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'app_theme.dart';
 import 'widgets/status_badge.dart';
 import 'service_detail_screen.dart';
 import 'add_ticket_screen.dart';
+import 'services/desktop_export_service.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -52,6 +54,77 @@ class _ServicesScreenState extends State<ServicesScreen> {
     }
   }
 
+  Future<void> _exportServicesToCSV() async {
+    if (_userCompanyName.isEmpty) return;
+
+    try {
+      final query = await FirebaseFirestore.instance
+          .collection('service_records')
+          .where('companyName', isEqualTo: _userCompanyName)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final headers = [
+        'Ticket No',
+        'Durum',
+        'Müşteri Name',
+        'Telefon',
+        'Cihaz',
+        'Detay',
+        'Tarih',
+        'Ücret',
+        'Garanti',
+      ];
+
+      final rows = query.docs.map((doc) {
+        final data = doc.data();
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        final dateStr = createdAt != null
+            ? '${createdAt.day}/${createdAt.month}/${createdAt.year}'
+            : '';
+
+        return [
+          data['ticketNo'] ?? '',
+          data['status'] ?? '',
+          data['customerName'] ?? '',
+          data['customerPhone'] ?? '',
+          data['deviceType'] ?? '',
+          data['deviceDetail'] ?? '',
+          dateStr,
+          data['price'] ?? 0,
+          data['isWarranty'] == true ? 'Evet' : 'Hayır',
+        ];
+      }).toList();
+
+      final result = await DesktopExportService.exportToCSV(
+        'servis_kayitlari_${_userCompanyName}_${DateFormat('yyyyMMdd').format(DateTime.now())}',
+        headers,
+        rows,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result != null
+                  ? 'Veriler başarıyla aktarıldı: $result'
+                  : 'Dışa aktarma başarısız oldu',
+            ),
+            backgroundColor: result != null
+                ? AppTheme.success
+                : AppTheme.danger,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: AppTheme.danger),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,6 +133,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
         title: const Text('Servisler'),
         automaticallyImplyLeading: false,
         actions: [
+          // CSV Dışa Aktar Butonu
+          IconButton(
+            onPressed: _exportServicesToCSV,
+            icon: const Icon(Icons.download, color: AppTheme.primaryBlue),
+            tooltip: 'CSV Olarak İndir',
+          ),
           TextButton.icon(
             onPressed: () {
               Navigator.of(context).push(

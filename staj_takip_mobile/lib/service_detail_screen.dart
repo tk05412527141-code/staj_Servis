@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'app_theme.dart';
 import 'widgets/status_badge.dart';
+import 'add_ticket_screen.dart';
 
 class ServiceDetailScreen extends StatefulWidget {
   final String ticketId;
@@ -153,6 +154,25 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       appBar: AppBar(
         title: const Text('Servis Detayı'),
         actions: [
+          // Düzenle Butonu
+          IconButton(
+            onPressed: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AddTicketScreen(
+                    companyName: widget.companyName,
+                    ticketId: widget.ticketId,
+                    initialData: data,
+                  ),
+                ),
+              );
+              if (result == true) {
+                _fetchTicket();
+              }
+            },
+            icon: const Icon(Icons.edit_outlined, color: AppTheme.primaryBlue),
+            tooltip: 'Düzenle',
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_horiz),
             onSelected: (value) {

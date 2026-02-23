@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import 'app_theme.dart';
+import 'services/desktop_export_service.dart';
 
 class IncomeScreen extends StatefulWidget {
   const IncomeScreen({super.key});
@@ -143,6 +145,85 @@ class _IncomeScreenState extends State<IncomeScreen> {
     });
   }
 
+  Future<void> _exportIncomeToCSV() async {
+    if (_userCompanyName.isEmpty) return;
+
+    try {
+      final startOfMonth = DateTime(_selectedYear, _selectedMonth, 1);
+      final endOfMonth = DateTime(
+        _selectedYear,
+        _selectedMonth + 1,
+        0,
+        23,
+        59,
+        59,
+      );
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('service_records')
+          .where('companyName', isEqualTo: _userCompanyName)
+          .where(
+            'createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth),
+          )
+          .where(
+            'createdAt',
+            isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth),
+          )
+          .get();
+
+      final headers = [
+        'Tarih',
+        'Müşteri',
+        'Cihaz',
+        'Detay',
+        'Ücret',
+        'Ticket No',
+      ];
+      final rows = snapshot.docs.map((doc) {
+        final data = doc.data();
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        final dateStr = createdAt != null
+            ? DateFormat('dd/MM/yyyy').format(createdAt)
+            : '';
+
+        return [
+          dateStr,
+          data['customerName'] ?? '',
+          data['deviceType'] ?? '',
+          data['deviceDetail'] ?? '',
+          data['price'] ?? 0,
+          data['ticketNo'] ?? '',
+        ];
+      }).toList();
+
+      final result = await DesktopExportService.exportToCSV(
+        'gelir_raporu_${_selectedMonth}_${_selectedYear}_$_userCompanyName',
+        headers,
+        rows,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result != null ? 'Rapor kaydedildi: $result' : 'Hata oluştu',
+            ),
+            backgroundColor: result != null
+                ? AppTheme.success
+                : AppTheme.danger,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: AppTheme.danger),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,6 +231,13 @@ class _IncomeScreenState extends State<IncomeScreen> {
       appBar: AppBar(
         title: const Text('Gelirler'),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: _exportIncomeToCSV,
+            icon: const Icon(Icons.download, color: AppTheme.primaryBlue),
+            tooltip: 'CSV Olarak İndir',
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

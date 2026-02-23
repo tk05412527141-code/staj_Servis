@@ -1,37 +1,40 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Ana renkler
-  static const Color primaryBlue = Color(0xFF1565C0);
-  static const Color darkBlue = Color(0xFF0D47A1);
-  static const Color lightBlue = Color(0xFFE3F2FD);
-  static const Color accentTeal = Color(0xFF00897B);
+  // Profesyonel Kurumsal Renk Paleti
+  static const Color primaryBlue = Color(0xFF1A237E); // Deep Navy
+  static const Color darkBlue = Color(0xFF0D1442); // Midnight Blue
+  static const Color lightBlue = Color(0xFFF0F2F9); // Soft Ice Blue
+  static const Color accentTeal = Color(0xFF26A69A); // Muted Teal
+  static const Color accentGold = Color(
+    0xFFC5A059,
+  ); // Kurumsal Gold (vurgu için)
 
-  // Durum renkleri
-  static const Color statusYolda = Color(0xFFFF9800);
-  static const Color statusAtandi = Color(0xFF4CAF50);
-  static const Color statusBekliyor = Color(0xFF9E9E9E);
-  static const Color statusTamamlandi = Color(0xFF1565C0);
+  // Durum renkleri (Profesyonel Muted tonlar)
+  static const Color statusYolda = Color(0xFFE67E22);
+  static const Color statusAtandi = Color(0xFF27AE60);
+  static const Color statusBekliyor = Color(0xFF7F8C8D);
+  static const Color statusTamamlandi = Color(0xFF2980B9);
 
   // Genel renkler
-  static const Color backgroundGrey = Color(0xFFF5F5F5);
+  static const Color backgroundGrey = Color(0xFFF4F7F9);
   static const Color cardWhite = Colors.white;
-  static const Color textDark = Color(0xFF212121);
-  static const Color textGrey = Color(0xFF757575);
-  static const Color textLight = Color(0xFFBDBDBD);
-  static const Color danger = Color(0xFFE53935);
-  static const Color success = Color(0xFF43A047);
-  static const Color warning = Color(0xFFFFA726);
+  static const Color textDark = Color(0xFF2C3E50);
+  static const Color textGrey = Color(0xFF7F8C8D);
+  static const Color textLight = Color(0xFFBDC3C7);
+  static const Color danger = Color(0xFFC0392B);
+  static const Color success = Color(0xFF27AE60);
+  static const Color warning = Color(0xFFF39C12);
 
-  // Gradient
+  // Gradient (Daha hafif ve kurumsal)
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryBlue, darkBlue],
+    colors: [primaryBlue, Color(0xFF283593)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient dashboardGradient = LinearGradient(
-    colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+    colors: [primaryBlue, Color(0xFF3949AB)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
