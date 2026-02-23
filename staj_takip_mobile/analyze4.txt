@@ -1,0 +1,26 @@
+﻿Analyzing staj_takip_mobile...                                  
+
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\service_detail_screen.dart:569:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\service_detail_screen.dart:570:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\service_detail_screen.dart:571:38 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\signup_screen.dart:205:25 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\signup_screen.dart:207:25 - curly_braces_in_flow_control_structures
+
+flutter : 5 issues fou
+nd. (ran in 2.8s)
+At line:1 char:1
++ flutter analyze 2>&1
+ | Out-File -FilePath 
+"C:\projeler\staj_Serv
+is\st ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (5 issues f   
+ ound. (ran in 2.8    
+s):String) [], Re    m
+oteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 

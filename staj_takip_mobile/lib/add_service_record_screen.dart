@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'service_record_model.dart';
+import 'app_theme.dart';
 
 class AddServiceRecordScreen extends StatefulWidget {
   final String companyName;
@@ -38,33 +38,47 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
       });
 
       try {
-        final newRecord = ServiceRecord(
-          id: '', // Firestore will generate
-          companyName: widget.companyName,
-          isWarranty: _isVet ? false : _isWarranty,
-          replacedPart: _isVet ? 'Yok' : _replacedPartController.text.trim(),
-          serviceEmployee: _serviceEmployeeController.text.trim(),
-          date: DateTime.now(),
-          animalProblem: _animalProblemController.text.trim(),
-          interventions: _interventionsController.text.trim(),
-          medications: _medicationsController.text.trim(),
-        );
+        final now = DateTime.now();
+        final timeStr =
+            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
-        await FirebaseFirestore.instance
-            .collection('service_records')
-            .add(newRecord.toMap());
+        await FirebaseFirestore.instance.collection('service_records').add({
+          'companyName': widget.companyName,
+          'isWarranty': _isVet ? false : _isWarranty,
+          'replacedPart': _isVet ? 'Yok' : _replacedPartController.text.trim(),
+          'serviceEmployee': _serviceEmployeeController.text.trim(),
+          'date': Timestamp.fromDate(now),
+          'createdAt': Timestamp.fromDate(now),
+          'animalProblem': _animalProblemController.text.trim(),
+          'interventions': _interventionsController.text.trim(),
+          'medications': _medicationsController.text.trim(),
+          'status': 'Bekliyor',
+          'statusHistory': [
+            {
+              'status': 'Talep Alındı',
+              'time': timeStr,
+              'timestamp': Timestamp.fromDate(now),
+            },
+          ],
+        });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Kayıt Başarıyla Eklendi!')),
+            const SnackBar(
+              content: Text('Kayıt Başarıyla Eklendi!'),
+              backgroundColor: AppTheme.success,
+            ),
           );
-          Navigator.of(context).pop(); // Return to previous screen
+          Navigator.of(context).pop();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Hata oluştu: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Hata oluştu: $e'),
+              backgroundColor: AppTheme.danger,
+            ),
+          );
         }
       } finally {
         if (mounted) {
@@ -102,10 +116,9 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
                 controller: _companyNameController,
                 decoration: const InputDecoration(
                   labelText: 'Şirket Adı',
-                  border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.business),
                 ),
-                readOnly: true, // Kullanıcı değiştiremez
+                readOnly: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Lütfen şirket adını giriniz';
@@ -119,7 +132,6 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
                   controller: _animalProblemController,
                   decoration: const InputDecoration(
                     labelText: 'Hayvanın Sorunu',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.pets),
                   ),
                   maxLines: 2,
@@ -135,7 +147,6 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
                   controller: _interventionsController,
                   decoration: const InputDecoration(
                     labelText: 'Yapılan Müdahaleler',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.medical_services),
                   ),
                   maxLines: 2,
@@ -145,7 +156,6 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
                   controller: _medicationsController,
                   decoration: const InputDecoration(
                     labelText: 'Verilen İlaçlar',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.medication),
                   ),
                 ),
@@ -154,7 +164,6 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
                   controller: _replacedPartController,
                   decoration: const InputDecoration(
                     labelText: 'Değişen Parça',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.build),
                   ),
                   validator: (value) {
@@ -184,7 +193,6 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
                 controller: _serviceEmployeeController,
                 decoration: InputDecoration(
                   labelText: _isVet ? 'Veteriner Hekim' : 'Servis Elemanı',
-                  border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.person),
                 ),
                 validator: (value) {
@@ -197,12 +205,15 @@ class _AddServiceRecordScreenState extends State<AddServiceRecordScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isLoading ? null : _saveRecord,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
                 child: _isLoading
-                    ? const CircularProgressIndicator()
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : const Text('Kaydet'),
               ),
             ],

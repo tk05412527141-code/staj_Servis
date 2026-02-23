@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────── Yardımcı Fonksiyonlar ─────────
+
+    // Giriş yapmış kullanıcının dokümanını getir
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Kullanıcı giriş yapmış mı?
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Kullanıcı bu şirkete ait mi?
+    function belongsToCompany(companyId) {
+      return isSignedIn() && getUserData().companyId == companyId;
+    }
+
+    // Kullanıcının rolü verilen listede mi?
+    function hasAnyRole(companyId, roles) {
+      return belongsToCompany(companyId) && getUserData().role in roles;
+    }
+
+    // Owner veya Admin mi?
+    function isAdminOrOwner(companyId) {
+      return hasAnyRole(companyId, ['owner', 'admin']);
+    }
+
+    // ───────── users Koleksiyonu ─────────
+    // Her kullanıcı sadece kendi profilini okuyabilir.
+    // Güncelleme: kendisi veya şirketinin admin/owner'ı yapabilir.
+    // Oluşturma/silme: sadece backend (Admin SDK / Cloud Functions).
+    match /users/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow update: if isSignedIn() &&
+        (request.auth.uid == uid || isAdminOrOwner(resource.data.companyId));
+      allow create, delete: if false;
+    }
+
+    // ───────── companies Koleksiyonu ─────────
+    match /companies/{companyId} {
+      allow read: if belongsToCompany(companyId);
+      allow update: if isAdminOrOwner(companyId);
+      allow create, delete: if false; // Backend tarafından yönetilir
+
+      // ── staff alt koleksiyonu ──
+      match /staff/{staffUid} {
+        allow read: if belongsToCompany(companyId);
+        allow write: if isAdminOrOwner(companyId);
+      }
+    }
+
+    // ───────── customers Koleksiyonu ─────────
+    match /customers/{customerId} {
+      allow read: if belongsToCompany(resource.data.companyId);
+      allow create: if isSignedIn() &&
+        belongsToCompany(request.resource.data.companyId) &&
+        hasAnyRole(request.resource.data.companyId, ['owner', 'admin', 'technician']);
+      allow update: if belongsToCompany(resource.data.companyId) &&
+        hasAnyRole(resource.data.companyId, ['owner', 'admin', 'technician']);
+      allow delete: if isAdminOrOwner(resource.data.companyId);
+    }
+
+    // ───────── tickets Koleksiyonu ─────────
+    match /tickets/{ticketId} {
+      allow read: if belongsToCompany(resource.data.companyId);
+      allow create: if isSignedIn() &&
+        belongsToCompany(request.resource.data.companyId) &&
+        hasAnyRole(request.resource.data.companyId, ['owner', 'admin', 'technician']);
+      allow update: if belongsToCompany(resource.data.companyId) &&
+        hasAnyRole(resource.data.companyId, ['owner', 'admin', 'technician']);
+      allow delete: if isAdminOrOwner(resource.data.companyId);
+
+      // ── workLogs alt koleksiyonu ──
+      match /workLogs/{logId} {
+        allow read: if belongsToCompany(
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.companyId
+        );
+        allow create: if isSignedIn() &&
+          belongsToCompany(request.resource.data.companyId) &&
+          hasAnyRole(request.resource.data.companyId, ['owner', 'admin', 'technician']);
+        allow update, delete: if isAdminOrOwner(resource.data.companyId);
+      }
+    }
+
+    // ───────── inventory Koleksiyonu (Opsiyonel) ─────────
+    match /inventory/{itemId} {
+      allow read: if belongsToCompany(resource.data.companyId);
+      allow create: if isSignedIn() &&
+        belongsToCompany(request.resource.data.companyId) &&
+        isAdminOrOwner(request.resource.data.companyId);
+      allow update: if belongsToCompany(resource.data.companyId) &&
+        hasAnyRole(resource.data.companyId, ['owner', 'admin', 'technician']);
+      allow delete: if isAdminOrOwner(resource.data.companyId);
+    }
+  }
+}
