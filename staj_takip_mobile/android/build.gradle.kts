@@ -17,6 +17,19 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
+    
+    tasks.withType<JavaCompile>().configureEach {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+        options.compilerArgs.add("-Xlint:-options")
+        options.compilerArgs.add("-Xlint:-deprecation")
+    }
 }
 
 tasks.register<Delete>("clean") {

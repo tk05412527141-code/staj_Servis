@@ -29,6 +29,23 @@ service cloud.firestore {
       return hasAnyRole(companyId, ['owner', 'admin']);
     }
 
+    // ───────── Veri Doğrulama Fonksiyonları ─────────
+
+    // Veri bir string mi ve boş değil mi?
+    function isNonEmptyString(val) {
+      return val is string && val.size() > 0;
+    }
+
+    // Geçerli bir rol mü?
+    function isValidRole(role) {
+      return role in ['owner', 'admin', 'technician'];
+    }
+
+    // Şirket ID'si mevcut mu ve doğru mu?
+    function isValidCompanyId(data) {
+      return isNonEmptyString(data.companyId);
+    }
+
     // ───────── users Koleksiyonu ─────────
     // Her kullanıcı sadece kendi profilini okuyabilir.
     // Güncelleme: kendisi veya şirketinin admin/owner'ı yapabilir.
@@ -36,7 +53,9 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow update: if isSignedIn() &&
-        (request.auth.uid == uid || isAdminOrOwner(resource.data.companyId));
+        (request.auth.uid == uid || isAdminOrOwner(resource.data.companyId)) &&
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'role', 'companyId'])) &&
+        (request.resource.data.role == null || isValidRole(request.resource.data.role));
       allow create, delete: if false;
     }
 
@@ -58,9 +77,12 @@ service cloud.firestore {
       allow read: if belongsToCompany(resource.data.companyId);
       allow create: if isSignedIn() &&
         belongsToCompany(request.resource.data.companyId) &&
-        hasAnyRole(request.resource.data.companyId, ['owner', 'admin', 'technician']);
+        hasAnyRole(request.resource.data.companyId, ['owner', 'admin', 'technician']) &&
+        isNonEmptyString(request.resource.data.name) &&
+        isValidCompanyId(request.resource.data);
       allow update: if belongsToCompany(resource.data.companyId) &&
-        hasAnyRole(resource.data.companyId, ['owner', 'admin', 'technician']);
+        hasAnyRole(resource.data.companyId, ['owner', 'admin', 'technician']) &&
+        (request.resource.data.name == null || isNonEmptyString(request.resource.data.name));
       allow delete: if isAdminOrOwner(resource.data.companyId);
     }
 
@@ -95,6 +117,13 @@ service cloud.firestore {
       allow update: if belongsToCompany(resource.data.companyId) &&
         hasAnyRole(resource.data.companyId, ['owner', 'admin', 'technician']);
       allow delete: if isAdminOrOwner(resource.data.companyId);
+    }
+    // ───────── audit_logs Koleksiyonu ─────────
+    match /audit_logs/{logId} {
+      allow read: if isAdminOrOwner(resource.data.companyId);
+      allow create: if isSignedIn() &&
+        belongsToCompany(request.resource.data.companyId);
+      allow update, delete: if false; // Denetim kayıtları değiştirilemez
     }
   }
 }

@@ -33,16 +33,30 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           .where('companyName', isEqualTo: widget.managerCompanyName)
           .get();
 
+      List<Map<String, dynamic>> tempEmployees = [];
+
+      for (var doc in query.docs) {
+        final data = doc.data();
+        final userId = doc.id;
+
+        // Bu personelin üzerindeki aktif iş sayısını bul
+        final ticketQuery = await FirebaseFirestore.instance
+            .collection('service_records')
+            .where('assignedTo', isEqualTo: userId)
+            .where('status', whereIn: ['Bekliyor', 'Atandı', 'Yolda'])
+            .get();
+
+        tempEmployees.add({
+          'id': userId,
+          'name': data['name'] ?? data['email']?.split('@')[0] ?? 'İsimsiz',
+          'email': data['email'] ?? '',
+          'role': data['role'] ?? 'employee',
+          'activeCount': ticketQuery.docs.length,
+        });
+      }
+
       setState(() {
-        _employees = query.docs.map((doc) {
-          final data = doc.data();
-          return {
-            'id': doc.id,
-            'name': data['name'] ?? data['email']?.split('@')[0] ?? 'İsimsiz',
-            'email': data['email'] ?? '',
-            'role': data['role'] ?? 'employee',
-          };
-        }).toList();
+        _employees = tempEmployees;
         _loadingEmployees = false;
       });
     } catch (e) {
@@ -323,6 +337,30 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             color: AppTheme.accentTeal,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // İş Yükü Göstergesi
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: (emp['activeCount'] as int) > 3
+                              ? AppTheme.danger.withValues(alpha: 0.1)
+                              : AppTheme.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${emp['activeCount']} İş',
+                          style: TextStyle(
+                            color: (emp['activeCount'] as int) > 3
+                                ? AppTheme.danger
+                                : AppTheme.success,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),

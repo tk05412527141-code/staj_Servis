@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'app_theme.dart';
+import 'services/notification_service.dart';
 
 class AddTicketScreen extends StatefulWidget {
   final String companyName;
@@ -178,6 +180,12 @@ class _AddTicketScreenState extends State<AddTicketScreen> {
               ),
             );
             Navigator.of(context).pop();
+
+            // Bildirim tetikle
+            NotificationService.showLocalNotificationDirectly(
+              'Yeni Servis Kaydı',
+              '${ticketData['customerName']} için $ticketNo nolu kayıt oluşturuldu.',
+            );
           }
         } else {
           // Düzenleme
@@ -196,6 +204,12 @@ class _AddTicketScreenState extends State<AddTicketScreen> {
             Navigator.of(
               context,
             ).pop(true); // Geri dönerken güncellendi bilgisi ver
+
+            // Bildirim tetikle
+            NotificationService.showLocalNotificationDirectly(
+              'Servis Güncellendi',
+              '${ticketData['customerName']} için kayıt güncellendi.',
+            );
           }
         }
       } catch (e) {

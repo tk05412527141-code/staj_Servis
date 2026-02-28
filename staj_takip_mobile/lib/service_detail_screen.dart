@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'app_theme.dart';
 import 'widgets/status_badge.dart';
 import 'add_ticket_screen.dart';
+import 'services/pdf_service.dart';
 
 class ServiceDetailScreen extends StatefulWidget {
   final String ticketId;
@@ -120,6 +121,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+      // Otomatik durum güncelleme: "Yolda"
+      final currentStatus = _ticketData?['status'] ?? 'Bekliyor';
+      if (currentStatus == 'Bekliyor' || currentStatus == 'Atandı') {
+        await _updateStatus('Yolda');
+      }
     }
   }
 
@@ -172,6 +179,15 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             },
             icon: const Icon(Icons.edit_outlined, color: AppTheme.primaryBlue),
             tooltip: 'Düzenle',
+          ),
+          // PDF Butonu
+          IconButton(
+            onPressed: () => PdfService.generateServiceReport(data),
+            icon: const Icon(
+              Icons.picture_as_pdf_outlined,
+              color: AppTheme.danger,
+            ),
+            tooltip: 'PDF Oluştur',
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_horiz),
