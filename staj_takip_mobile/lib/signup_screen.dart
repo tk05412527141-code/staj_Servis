@@ -201,10 +201,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     obscureText: _obscureConfirm,
                     validator: (v) {
-                      if (v == null || v.isEmpty)
+                      if (v == null || v.isEmpty) {
                         return 'Şifre tekrarı gerekli';
-                      if (v != _passwordController.text)
+                      }
+                      if (v != _passwordController.text) {
                         return 'Şifreler eşleşmiyor';
+                      }
                       return null;
                     },
                   ),

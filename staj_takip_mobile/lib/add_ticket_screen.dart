@@ -295,7 +295,7 @@ class _AddTicketScreenState extends State<AddTicketScreen> {
                     _sectionTitle('Cihaz Bilgileri'),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: _selectedDeviceType,
+                      initialValue: _selectedDeviceType,
                       decoration: const InputDecoration(
                         labelText: 'Cihaz Türü',
                         prefixIcon: Icon(Icons.devices_outlined),
@@ -329,7 +329,7 @@ class _AddTicketScreenState extends State<AddTicketScreen> {
                     _sectionTitle('Servis Detayları'),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: _selectedPriority,
+                      initialValue: _selectedPriority,
                       decoration: const InputDecoration(
                         labelText: 'Öncelik',
                         prefixIcon: Icon(Icons.flag_outlined),
@@ -363,7 +363,7 @@ class _AddTicketScreenState extends State<AddTicketScreen> {
                       title: const Text('Garanti Kapsamında'),
                       value: _isWarranty,
                       onChanged: (v) => setState(() => _isWarranty = v),
-                      activeColor: AppTheme.success,
+                      activeThumbColor: AppTheme.success,
                     ),
                     const SizedBox(height: 32),
                     SizedBox(

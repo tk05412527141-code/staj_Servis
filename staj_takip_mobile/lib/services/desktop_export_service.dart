@@ -10,13 +10,10 @@ class DesktopExportService {
   ) async {
     try {
       // CSV içeriğini oluştur
-      String csvData = headers.join(',') + '\n';
+      String csvData = '${headers.join(',')}\n';
       for (var row in rows) {
         csvData +=
-            row
-                .map((e) => '"${e.toString().replaceAll('"', '""')}"')
-                .join(',') +
-            '\n';
+            '${row.map((e) => '"${e.toString().replaceAll('"', '""')}"').join(',')}\n';
       }
 
       // Kayıt yerini belirle (Masaüstü veya İndirilenler)

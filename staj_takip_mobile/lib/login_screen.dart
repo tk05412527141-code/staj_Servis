@@ -399,7 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: DropdownButtonHideUnderline(
         child: DropdownButtonFormField<String>(
-          value: _selectedCompanyCode,
+          initialValue: _selectedCompanyCode,
           decoration: const InputDecoration(
             border: InputBorder.none,
             prefixIcon: Icon(Icons.business, color: Color(0xFF1A3B8E)),
