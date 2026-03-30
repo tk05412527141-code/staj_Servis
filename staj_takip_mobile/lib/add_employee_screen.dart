@@ -77,7 +77,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       List<Map<String, dynamic>> tempEmployees = [];
 
       for (var doc in query.docs) {
-        final data = doc.data();
+        final data = doc.data() as Map<String, dynamic>;
         final userId = doc.id;
         final isActive = (data['isActive'] ?? true) == true;
 
@@ -85,7 +85,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         final ticketQuery = await FirebaseFirestore.instance
             .collection('service_records')
             // assignedTo currently stores a name string in this app; keep a best-effort count
-            .where('assignedTo', isEqualTo: data['name'] ?? '')
+            .where('assignedTo', isEqualTo: (data['name'] ?? '').toString())
             .where('status', whereIn: ['Bekliyor', 'Atandı', 'Yolda'])
             .get();
 
@@ -355,6 +355,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       ),
                     ],
                   )
+                else
+                  const SizedBox.shrink(),
                 if (!_loadingEmployees)
                   Text(
                     '${_employees.length} kişi',
