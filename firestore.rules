@@ -19,6 +19,11 @@ service cloud.firestore {
       return isSignedIn() && getUserData().companyId == companyId;
     }
 
+    // Uygulamadaki mevcut şema: companyName üzerinden şirket bağlama
+    function belongsToCompanyName(companyName) {
+      return isSignedIn() && getUserData().companyName == companyName;
+    }
+
     // Kullanıcının rolü verilen listede mi?
     function hasAnyRole(companyId, roles) {
       return belongsToCompany(companyId) && getUserData().role in roles;
@@ -38,7 +43,7 @@ service cloud.firestore {
 
     // Geçerli bir rol mü?
     function isValidRole(role) {
-      return role in ['owner', 'admin', 'technician'];
+      return role in ['owner', 'admin', 'manager', 'technician', 'employee'];
     }
 
     // Şirket ID'si mevcut mu ve doğru mu?
@@ -47,14 +52,44 @@ service cloud.firestore {
     }
 
     // ───────── users Koleksiyonu ─────────
-    // Her kullanıcı sadece kendi profilini okuyabilir.
-    // Güncelleme: kendisi veya şirketinin admin/owner'ı yapabilir.
+    // Her kullanıcı kendi profilini okuyabilir.
+    // Şirket yöneticileri (manager/admin/owner) kendi şirketindeki aktif çalışanları görebilir.
+    // Pasif çalışanları sadece yönetici (manager/admin/owner) görebilir.
+    // Güncelleme: kendisi veya şirketinin manager/admin/owner'ı yapabilir.
     // Oluşturma/silme: sadece backend (Admin SDK / Cloud Functions).
     match /users/{uid} {
-      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isSignedIn() && (
+        // always allow self
+        request.auth.uid == uid ||
+        // company managers can read within their companyName, but inactive only for managers
+        (
+          belongsToCompanyName(resource.data.companyName) &&
+          getUserData().role in ['owner', 'admin', 'manager']
+        )
+      );
+
       allow update: if isSignedIn() &&
-        (request.auth.uid == uid || isAdminOrOwner(resource.data.companyId)) &&
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'role', 'companyId'])) &&
+        (
+          request.auth.uid == uid ||
+          (
+            belongsToCompanyName(resource.data.companyName) &&
+            getUserData().role in ['owner', 'admin', 'manager']
+          )
+        ) &&
+        (
+          // allow limited profile fields + soft-delete fields
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name',
+            'phone',
+            'role',
+            'companyId',
+            'companyName',
+            'isActive',
+            'deactivatedAt',
+            'deactivatedBy',
+            'deactivatedReason'
+          ])
+        ) &&
         (request.resource.data.role == null || isValidRole(request.resource.data.role));
       allow create, delete: if false;
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'app_theme.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
@@ -19,30 +20,72 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   // Mevcut çalışanlar listesi
   List<Map<String, dynamic>> _employees = [];
   bool _loadingEmployees = true;
+  bool _showInactive = false;
+  String _currentUserRole = '';
+  String _currentUserUid = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchEmployees();
+    _fetchCurrentUser();
+  }
+
+  bool get _canManageEmployees =>
+      _currentUserRole == 'manager' ||
+      _currentUserRole == 'owner' ||
+      _currentUserRole == 'admin';
+
+  Future<void> _fetchCurrentUser() async {
+    try {
+      final authUser = FirebaseAuth.instance.currentUser;
+      if (authUser == null) return;
+
+      _currentUserUid = authUser.uid;
+
+      final myDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(authUser.uid)
+          .get();
+
+      if (!myDoc.exists) return;
+      final data = myDoc.data()!;
+
+      if (!mounted) return;
+      setState(() {
+        _currentUserRole = (data['role'] ?? '').toString();
+      });
+    } catch (_) {
+      // ignore
+    } finally {
+      _fetchEmployees();
+    }
   }
 
   Future<void> _fetchEmployees() async {
     try {
-      final query = await FirebaseFirestore.instance
+      Query usersQuery = FirebaseFirestore.instance
           .collection('users')
-          .where('companyName', isEqualTo: widget.managerCompanyName)
-          .get();
+          .where('companyName', isEqualTo: widget.managerCompanyName);
+
+      // Default behavior: hide inactive employees unless manager toggles it.
+      if (!_showInactive) {
+        usersQuery = usersQuery.where('isActive', isEqualTo: true);
+      }
+
+      final query = await usersQuery.get();
 
       List<Map<String, dynamic>> tempEmployees = [];
 
       for (var doc in query.docs) {
         final data = doc.data();
         final userId = doc.id;
+        final isActive = (data['isActive'] ?? true) == true;
 
         // Bu personelin üzerindeki aktif iş sayısını bul
         final ticketQuery = await FirebaseFirestore.instance
             .collection('service_records')
-            .where('assignedTo', isEqualTo: userId)
+            // assignedTo currently stores a name string in this app; keep a best-effort count
+            .where('assignedTo', isEqualTo: data['name'] ?? '')
             .where('status', whereIn: ['Bekliyor', 'Atandı', 'Yolda'])
             .get();
 
@@ -51,6 +94,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           'name': data['name'] ?? data['email']?.split('@')[0] ?? 'İsimsiz',
           'email': data['email'] ?? '',
           'role': data['role'] ?? 'employee',
+          'isActive': isActive,
+          'deactivatedAt': data['deactivatedAt'],
+          'deactivatedBy': data['deactivatedBy'],
+          'deactivatedReason': data['deactivatedReason'],
           'activeCount': ticketQuery.docs.length,
         });
       }
@@ -62,6 +109,44 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     } catch (e) {
       debugPrint('Çalışan listesi hatası: $e');
       setState(() => _loadingEmployees = false);
+    }
+  }
+
+  Future<void> _setEmployeeActive({
+    required String userId,
+    required bool isActive,
+  }) async {
+    try {
+      final updates = <String, dynamic>{
+        'isActive': isActive,
+        'deactivatedAt': isActive ? null : FieldValue.serverTimestamp(),
+        'deactivatedBy': isActive ? null : _currentUserUid,
+        'deactivatedReason': isActive ? null : 'MANUAL_DEACTIVATION',
+      };
+      await FirebaseFirestore.instance.collection('users').doc(userId).update(
+            updates,
+          );
+      await _fetchEmployees();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isActive ? 'Çalışan aktifleştirildi.' : 'Çalışan pasife alındı.',
+            ),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('İşlem başarısız: $e'),
+            backgroundColor: AppTheme.danger,
+          ),
+        );
+      }
     }
   }
 
@@ -82,6 +167,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
             await doc.reference.update({
               'companyName': widget.managerCompanyName,
               'role': 'employee',
+              'isActive': true,
+              'deactivatedAt': null,
+              'deactivatedBy': null,
+              'deactivatedReason': null,
             });
           }
 
@@ -246,6 +335,26 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     color: AppTheme.textDark,
                   ),
                 ),
+                if (_canManageEmployees)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Pasifleri Göster',
+                        style: TextStyle(
+                          color: AppTheme.textGrey,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Switch(
+                        value: _showInactive,
+                        onChanged: (v) {
+                          setState(() => _showInactive = v);
+                          _fetchEmployees();
+                        },
+                      ),
+                    ],
+                  )
                 if (!_loadingEmployees)
                   Text(
                     '${_employees.length} kişi',
@@ -319,6 +428,15 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                                 color: AppTheme.textGrey,
                               ),
                             ),
+                            if (emp['isActive'] == false)
+                              const Text(
+                                'Pasif',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.danger,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -364,6 +482,37 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           ),
                         ),
                       ),
+                      if (_canManageEmployees &&
+                          emp['id'] != _currentUserUid) ...[
+                        const SizedBox(width: 8),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'deactivate') {
+                              _setEmployeeActive(
+                                userId: emp['id'],
+                                isActive: false,
+                              );
+                            } else if (value == 'activate') {
+                              _setEmployeeActive(
+                                userId: emp['id'],
+                                isActive: true,
+                              );
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            if (emp['isActive'] == true)
+                              const PopupMenuItem(
+                                value: 'deactivate',
+                                child: Text('Pasife Al'),
+                              ),
+                            if (emp['isActive'] == false)
+                              const PopupMenuItem(
+                                value: 'activate',
+                                child: Text('Aktifleştir'),
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

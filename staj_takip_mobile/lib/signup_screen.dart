@@ -42,6 +42,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
               'name': name,
               'companyName': '',
               'role': 'employee',
+              'isActive': true,
+              'deactivatedAt': null,
+              'deactivatedBy': null,
+              'deactivatedReason': null,
               'createdAt': Timestamp.fromDate(DateTime.now()),
             });
 
