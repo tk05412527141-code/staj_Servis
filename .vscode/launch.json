@@ -6,20 +6,23 @@
     "configurations": [
         {
             "name": "staj_takip_mobile",
-            "cwd": "staj_takip_mobile",
+            "cwd": "${workspaceFolder}/staj_takip_mobile",
+            "program": "${workspaceFolder}/staj_takip_mobile/lib/main.dart",
             "request": "launch",
             "type": "dart"
         },
         {
             "name": "staj_takip_mobile (profile mode)",
-            "cwd": "staj_takip_mobile",
+            "cwd": "${workspaceFolder}/staj_takip_mobile",
+            "program": "${workspaceFolder}/staj_takip_mobile/lib/main.dart",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
             "name": "staj_takip_mobile (release mode)",
-            "cwd": "staj_takip_mobile",
+            "cwd": "${workspaceFolder}/staj_takip_mobile",
+            "program": "${workspaceFolder}/staj_takip_mobile/lib/main.dart",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

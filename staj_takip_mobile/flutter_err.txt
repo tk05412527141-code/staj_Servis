@@ -1,0 +1,4 @@
+Analyzing staj_takip_mobile...                                  
+
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\add_employee_screen.dart:171:15 - deprecated_member_use
+

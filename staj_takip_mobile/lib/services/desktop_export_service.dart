@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 class DesktopExportService {
   static Future<String?> exportToCSV(
@@ -32,7 +33,7 @@ class DesktopExportService {
 
       return path;
     } catch (e) {
-      print('Dışa aktarma hatası: $e');
+      debugPrint('Dışa aktarma hatası: $e');
       return null;
     }
   }

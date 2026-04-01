@@ -585,14 +585,14 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   void _showDeleteDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Servisi Sil'),
         content: const Text(
           'Bu servis kaydını silmek istediğinizden emin misiniz?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('İptal'),
           ),
           TextButton(
@@ -601,8 +601,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   .collection('service_records')
                   .doc(widget.ticketId)
                   .delete();
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext); // dialog
+              }
               if (mounted) {
-                Navigator.pop(context); // dialog
                 Navigator.pop(context); // detail screen
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

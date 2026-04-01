@@ -15,11 +15,11 @@ void main() async {
 
   // App Check Initialization
   await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
-    webProvider: ReCaptchaV3Provider(
+    providerAndroid: kDebugMode
+        ? AndroidDebugProvider()
+        : AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode ? AppleDebugProvider() : AppleDeviceCheckProvider(),
+    providerWeb: ReCaptchaV3Provider(
       'recaptcha-v3-site-key',
     ), // Use your actual site key for web
   );

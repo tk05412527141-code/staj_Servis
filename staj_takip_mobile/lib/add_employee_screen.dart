@@ -132,7 +132,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isActive ? 'Çalışan aktifleştirildi.' : 'Çalışan pasife alındı.',
+              isActive ? 'Çalışan listeye geri getirildi.' : 'Çalışan silindi (pasife alındı).',
             ),
             backgroundColor: AppTheme.success,
           ),
@@ -148,6 +148,79 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         );
       }
     }
+  }
+
+  Future<void> _showEditEmployeeDialog(Map<String, dynamic> emp) async {
+    final nameController = TextEditingController(text: emp['name']);
+    String selectedRole = emp['role'] ?? 'employee';
+    final roles = ['admin', 'manager', 'technician', 'employee'];
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Çalışanı Düzenle'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Ad Soyad'),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              initialValue: roles.contains(selectedRole) ? selectedRole : 'employee',
+              decoration: const InputDecoration(labelText: 'Rol/Yetki'),
+              items: roles.map((r) {
+                return DropdownMenuItem(value: r, child: Text(_roleLabel(r)));
+              }).toList(),
+              onChanged: (v) => selectedRole = v!,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              setState(() => _isLoading = true);
+              try {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(emp['id'])
+                    .update({
+                  'name': nameController.text.trim(),
+                  'role': selectedRole,
+                });
+                await _fetchEmployees();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Çalışan başarıyla güncellendi.'),
+                      backgroundColor: AppTheme.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Hata: $e'),
+                      backgroundColor: AppTheme.danger,
+                    ),
+                  );
+                }
+              } finally {
+                if (mounted) setState(() => _isLoading = false);
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _addEmployee() async {
@@ -340,7 +413,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'Pasifleri Göster',
+                        'Silinenleri Göster',
                         style: TextStyle(
                           color: AppTheme.textGrey,
                           fontSize: 12,
@@ -432,7 +505,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             ),
                             if (emp['isActive'] == false)
                               const Text(
-                                'Pasif',
+                                'Silindi (Pasif)',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.danger,
@@ -489,7 +562,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                         const SizedBox(width: 8),
                         PopupMenuButton<String>(
                           onSelected: (value) {
-                            if (value == 'deactivate') {
+                            if (value == 'edit') {
+                              _showEditEmployeeDialog(emp);
+                            } else if (value == 'deactivate') {
                               _setEmployeeActive(
                                 userId: emp['id'],
                                 isActive: false,
@@ -502,15 +577,19 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             }
                           },
                           itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Text('Düzenle'),
+                            ),
                             if (emp['isActive'] == true)
                               const PopupMenuItem(
                                 value: 'deactivate',
-                                child: Text('Pasife Al'),
+                                child: Text('Sil (Kayıtları Tutar)', style: TextStyle(color: AppTheme.danger)),
                               ),
                             if (emp['isActive'] == false)
                               const PopupMenuItem(
                                 value: 'activate',
-                                child: Text('Aktifleştir'),
+                                child: Text('Geri Getir'),
                               ),
                           ],
                         ),

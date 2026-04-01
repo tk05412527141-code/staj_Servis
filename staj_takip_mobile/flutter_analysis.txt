@@ -1,0 +1,11 @@
+﻿Analyzing staj_takip_mobile...                                  
+
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\add_ticket_screen.dart:4:8 - unnecessary_import
+   info - 'androidProvider' is deprecated and shouldn't be used. Use providerAndroid instead. This parameter will be removed in a future major release - lib\main.dart:18:5 - deprecated_member_use
+   info - 'appleProvider' is deprecated and shouldn't be used. Use providerApple instead. This parameter will be removed in a future major release - lib\main.dart:21:5 - deprecated_member_use
+   info - 'webProvider' is deprecated and shouldn't be used. Use providerWeb instead. This parameter will be removed in a future major release - lib\main.dart:22:5 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\service_detail_screen.dart:605:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\service_detail_screen.dart:606:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\service_detail_screen.dart:607:38 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\services\desktop_export_service.dart:35:7 - avoid_print
+
